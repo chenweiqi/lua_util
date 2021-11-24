@@ -1,14 +1,15 @@
---
--- author: chenweiqi 2021-11-22
--- 
--- check whether the table has changed
---
+local table_util = {}
+local version = _VERSION and tonumber(_VERSION:match("5.*"))
 
-local function dirty_check(root, dirty_flag, gc_threshold)
+-- author: chenweiqi 2021-11-22
+-- check whether the table has changed
+-- >= lua 5.2  (lua 5.1 __len is not available)
+function table_util.dirty_check(root, dirty_flag, gc_threshold)
 	dirty_flag = dirty_flag or "__dirty"
 	gc_threshold = gc_threshold or 100
 	assert(type(dirty_flag) == "string", "dirty_flag invalid")
 	assert(type(gc_threshold) == "number" and gc_threshold >= 0, "gc_threshold invalid")
+	assert(version>=5.2, "lua version >= 5.2")
 	local dummy = {}
 	local function assert_key(key)
 		assert(type(key) ~= "table", "not support table key")
@@ -16,7 +17,7 @@ local function dirty_check(root, dirty_flag, gc_threshold)
 	local g_set = {}
 	local threshold = 0
 	local function check_alive(t, alive)
-		if type(t) ~= "table" then
+		if type(t) ~= "table" or alive[t] then
 			return
 		end
 		alive[t] = true
@@ -28,6 +29,7 @@ local function dirty_check(root, dirty_flag, gc_threshold)
 		threshold = 0
 		local alive = {}
 		check_alive(root, alive)
+		print(#alive)
 		local all_cnt, del_cnt = 0,0
 		for t in pairs(g_set) do
 			all_cnt = all_cnt + 1
@@ -81,64 +83,13 @@ local function dirty_check(root, dirty_flag, gc_threshold)
 	dummy.__pairs = function(t, k)
 		return next, g_set[t], k
 	end
+	dummy.__len = function(t)
+		return #g_set[t]
+	end
 	check_table(root)
 	return gc_sweep
 end
 
 
--- for example
-
-local tb = {1,2,3, {}}
-local gc_sweep = dirty_check(tb, "__dirty", 100)
-print("foreach table tb")
-for k,v in pairs(tb) do
-	print(k,v)
-end
-
-print("table dirty 1", tb.__dirty)
-tb[3]=1
-print("table dirty 2", tb.__dirty)
-
-tb.__dirty = nil
-tb[3]=2
-print("table dirty 3", tb.__dirty)
-
-tb.__dirty = nil
-local t={{},{},{},{},{}}
-tb[4] = t
-print("table dirty 4", tb.__dirty)
-
-
-tb.__dirty = nil
-t[3][1] = 1
-print("table dirty 5", tb.__dirty)
-
-
-tb.__dirty = nil
-t[3][1] = 2
-print("table dirty 6", tb.__dirty)
-
-
-tb.__dirty = nil
-t[3][2] = {}
-print("table dirty 7", tb.__dirty)
-
--- check gc
-tb.__dirty = nil
-local tt = t[3][2]
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-tt[1] = {}
-print("table dirty 8", tb.__dirty)
-tb.__dirty = nil
-
-
-print("gc_sweep", gc_sweep())
+return table_util
 
