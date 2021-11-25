@@ -29,7 +29,6 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 		threshold = 0
 		local alive = {}
 		check_alive(root, alive)
-		print(#alive)
 		local all_cnt, del_cnt = 0,0
 		for t in pairs(g_set) do
 			all_cnt = all_cnt + 1
