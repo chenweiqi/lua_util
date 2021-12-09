@@ -89,6 +89,27 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 	return gc_sweep
 end
 
+-- table clone, avoid to modify table reference
+function table_util.clone(obj)
+	local lookup_table = {}
+	local function _clone(obj)
+		if type(obj) ~= "table" then
+			return obj
+		end
+		if lookup_table[obj] then
+			return lookup_table[obj]
+		end
+		
+		local new_table = {}
+		lookup_table[obj] = new_table
+		for key, val in pairs(obj) do
+			new_table[_clone(key)] = _clone(val)
+		end
+		return new_table
+	end
+	return _clone(obj)
+end
+
 
 return table_util
 
