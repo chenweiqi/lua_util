@@ -51,7 +51,7 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 		g_set[t] = nil
 	end
 
-	local function gc_sweep()
+	local function collect()
 		if threshold == 0 then
 			return 0
 		end
@@ -102,15 +102,16 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 			is_dirty = v
 			return
 		end
-		is_dirty = true
 		assert_key(k)
-		check_table(v)
 		local old = g_set[t][k]
+		if old == v then return end
+		is_dirty = true
+		check_table(v)
 		g_set[t][k] = v
 		if type(old) == "table" then
 			threshold = threshold + 1
 			if threshold > gc_threshold then
-				gc_sweep()
+				collect()
 			end
 		end
 	end
@@ -137,7 +138,7 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 		if option == "restore" then
 			return restore(t)
 		elseif option == "collect" then
-			return gc_sweep()
+			return collect()
 		elseif option == "count" then
 			return count()
 		end
