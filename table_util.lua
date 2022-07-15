@@ -1,5 +1,6 @@
 local table_util = {}
 local version = _VERSION and tonumber(_VERSION:match("5.*"))
+assert(version>=5.2, "lua version >= 5.2")
 
 -- author: chenweiqi 2021-11-22
 -- check whether the table has changed
@@ -10,7 +11,6 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 	assert(type(root) == "table", "not table")
 	assert(type(dirty_flag) == "string", "dirty_flag invalid")
 	assert(type(gc_threshold) == "number" and gc_threshold >= 0, "gc_threshold invalid")
-	assert(version>=5.2, "lua version >= 5.2")
 	
 	local dummy = {}
 	local g_set = {}
