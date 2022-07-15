@@ -40,6 +40,19 @@ table 变成 `dirty table` 后，注意：
 * pairs 遍历不受影响
 * \# 表达式不受影响
 * 子项 k/v 不能是 metatable
-* next 受影响
+* next 受影响 （改用后面的方式）
 * gc 可能受影响。引用子项 table 会使 `dirty table` 无法被回收，但可通过调用 t "restore" 恢复
 
+```lua
+-- next correct version:
+
+local _next = next
+next = function(t, k)
+    local mt = getmetatable(t)
+    if mt and mt.__pairs then
+        local f, t1 = pairs(t)
+        return f(t1, k)
+    end
+    return _next(t, k)
+end
+```
