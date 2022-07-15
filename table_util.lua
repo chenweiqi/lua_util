@@ -37,12 +37,7 @@ function table_util.dirty_check(root, dirty_flag, gc_threshold)
 		assert(mt == dummy, "restore invalid metatable")
 		setmetatable(t, nil)
 		local gt = g_set[t]
-		local k,v
-		while true do
-			k, v = next(gt, k)
-			if not v then
-				break
-			end
+		for k,v in pairs(gt) do
 			if type(v) == "table" then
 				restore(v)
 			end
